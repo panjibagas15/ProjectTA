@@ -7,8 +7,8 @@ class Transaksi extends CI_Controller {
 	{
 		parent::__construct();
 		$this->load->model('transaksi_model');
-		// proteksi halam admin dengan fungsi cek_lign yang ada di simple login
-		$this->simple_login->cek_login();
+		$this->load->model('obat_model');
+		$this->load->model('user_model');
 	}
 
 	public function index()
@@ -22,13 +22,41 @@ class Transaksi extends CI_Controller {
 		$this->load->view('admin/layout/wrapper', $data, FALSE);
 	}
 
-	// Delete transaksi
-	public function delete($id_transaksi)
+		// Tambah Pelanggan
+	public function tambah()
 	{
-		$data = array('ID_TRANSAKSI'	=> $id_transaksi);
-		$this->transaksi_model->delete($data);
-		$this->session->set_flashdata('sukses', 'Data telah dihapus');
-		redirect(base_url('admin/transaksi'),'refresh');
+		// Validasi Input
+		$obat = $this->obat_model->listing();
+		$user = $this->user_model->listing();
+
+		$valid = $this->form_validation;
+
+		$valid->set_rules('BAYAR','Bayar','required',
+			array(	'required'			=>'%s harus diisi'));
+
+		if($valid->run()===FALSE) {
+		// end validasi
+
+		$data = array(	'title'		=> 'Pembayaran',
+						'obat'		=> $obat,
+						'user'		=> $user,
+						'isi'		=> 'admin/transaksi/tambah'
+					);
+		$this->load->view('admin/layout/wrapper', $data, FALSE);
+
+		// Masuk database
+		}else{
+			$i = $this->input;
+
+			$data = array(	'ID_OBAT'				=> $i->post('ID_OBAT'),
+							'ID_USER'				=> $i->post('ID_USER'),
+							'BAYAR'					=> $i->post('BAYAR')
+						);
+			$this->transaksi_model->tambah($data);
+			$this->session->set_flashdata('sukses', 'Pembelian Sukses');
+			redirect(base_url('admin/transaksi'),'refresh');
+		}
+		// End Masuk Database
 	}
 
 }
